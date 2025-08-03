@@ -1,7 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from deepface import DeepFace
-import os
+import face_recognition
 
 app = Flask(__name__)
 CORS(app)
@@ -9,33 +8,39 @@ CORS(app)
 @app.route("/compare", methods=["POST"])
 def compare_faces():
     try:
-        img1 = request.files['img1']
-        img2 = request.files['img2']
-        img1_path = "img1.jpg"
-        img2_path = "img2.jpg"
-        img1.save(img1_path)
-        img2.save(img2_path)
+        uploaded_image = request.files['image']
+        image = face_recognition.load_image_file(uploaded_image)
+        uploaded_encodings = face_recognition.face_encodings(image)
 
-        result = DeepFace.verify(img1_path, img2_path, enforce_detection=False)
+        if not uploaded_encodings:
+            return jsonify({"match": False, "similarity_percent": 0, "alert": "No face detected."})
 
-        similarity = 100 - result['distance'] * 100
-        is_match = result['verified']
+        uploaded_encoding = uploaded_encodings[0]
 
-        # If match is suspicious
-        if is_match and similarity < 90:
-            alert = "Potential misuse detected! Face matched with low confidence."
-        elif is_match:
-            alert = "Photo matched securely."
+        known_image = face_recognition.load_image_file("ref_images/person1.jpg")
+        known_encoding = face_recognition.face_encodings(known_image)[0]
+
+        result = face_recognition.compare_faces([known_encoding], uploaded_encoding)[0]
+        distance = face_recognition.face_distance([known_encoding], uploaded_encoding)[0]
+        similarity = round((1 - distance) * 100, 2)
+
+        if result:
+            alert = "Misuse detected! Face matched."
         else:
-            alert = "No match found. Safe."
+            alert = "Safe! No match found."
 
         return jsonify({
-            "match": is_match,
-            "similarity_percent": round(similarity, 2),
+            "match": result,
+            "similarity_percent": similarity,
             "alert": alert
         })
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
 
-if __name__ == '__main__':
-    app.run(debug=True)
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+@app.route('/')
+def home():
+    return "FaceGuard Backend is running"
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8080)
