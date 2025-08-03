@@ -1,42 +1,26 @@
+# FaceGuard Backend (Render-Compatible Version)
 
-# FaceGuard Backend
-
-This is the backend for the FaceGuard project — an AI-powered tool to detect and prevent photo misuse online.
+This backend uses `face_recognition` instead of DeepFace to allow smooth, conflict-free hosting on Render.com.
 
 ## Features
-- Compares two face images using DeepFace (AI)
-- Returns match percentage and misuse alert
-- Flask-based REST API with CORS enabled
+- Accepts uploaded image
+- Compares it to a stored reference image
+- Returns face match result with similarity percentage
 
-## Requirements
-- Python 3.7+
+## Setup
+1. Place a photo to protect in `ref_images/person1.jpg`
+2. Install requirements:
+   ```bash
+   pip install -r requirements.txt
+   python app.py
+   ```
 
-## Installation
+## Endpoint
+- **POST /compare** — with form field `image`
+- Returns: `match`, `similarity_percent`, and `alert` message
 
-```bash
-pip install -r requirements.txt
-python app.py
-```
-
-## API Endpoint
-
-**POST** `/compare`
-
-**Form Data:**
-- `img1`: Base/reference image
-- `img2`: Uploaded image to compare
-
-**Response:**
-```json
-{
-  "match": true,
-  "similarity_percent": 92.67,
-  "alert": "Photo matched securely."
-}
-```
-
-## Deployment
-You can deploy this using [Render](https://render.com/) by connecting it to a GitHub repository.
+## Hosting
+- Recommended: [Render.com](https://render.com) Free Plan
 
 ## License
 MIT
