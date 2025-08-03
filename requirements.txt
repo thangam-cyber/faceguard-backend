@@ -1,4 +1,7 @@
 flask
 flask-cors
-deepface
+deepface==0.0.75
+tensorflow==2.11.0
+numpy
 opencv-python
+
